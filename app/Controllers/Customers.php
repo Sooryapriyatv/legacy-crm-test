@@ -23,13 +23,13 @@ class Customers extends BaseController
         $status = $this->request->getGet('status');
         $city = $this->request->getGet('city');
 
-        $builder = $this->customerModel->builder();
-
-        $customers = $builder->orderBy('id', 'DESC')->paginate(20);
+        $customers = $this->customerModel
+            ->orderBy('id', 'DESC')
+            ->paginate(20);
 
         $data = [
             'customers' => $customers,
-            'pager' => null,
+            'pager' => $this->customerModel->pager,
             'search' => $search,
             'status' => $status,
             'city' => $city
