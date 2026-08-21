@@ -32,6 +32,7 @@
             class="form-control"
             placeholder="Search name or email..."
             value="<?= esc($search ?? '') ?>"
+            id="customerSearch"
             maxlength="100">
     </div>
 
@@ -67,7 +68,7 @@
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="customersTable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -141,5 +142,23 @@
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+document.getElementById('customerSearch').addEventListener('keyup', function() {
+    let searchValue = this.value.toLowerCase();
+    let rows = document.querySelectorAll('#customersTable tbody tr');
+
+    rows.forEach(function(row) {
+        let name = row.cells[1]?.textContent.toLowerCase() || '';
+        let email = row.cells[2]?.textContent.toLowerCase() || '';
+
+        if (name.includes(searchValue) || email.includes(searchValue)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
 
 <?= $this->include('layout/footer') ?>
