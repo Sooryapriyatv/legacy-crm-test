@@ -19,7 +19,7 @@ class ActivityModel extends Model
         'user_id'
     ];
 
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $dateFormat = 'datetime';
     protected $createdField = 'created_at';
     protected $updatedField = null;
