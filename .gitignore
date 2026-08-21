@@ -1,0 +1,44 @@
+# ANSWER KEY - DO NOT COMMIT!
+BUGS.md
+
+# CodeIgniter Files
+writable/
+.env
+app/Config/Boot/
+app/Config/Constants.php
+app/Config/Mimes.php
+app/Config/Paths.php
+app/Config/Publishers.php
+app/Config/UserAgents.php
+app/Views/errors/
+
+# Composer
+vendor/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.bak
+
+# Logs
+*.log
+
+# Cache
+app/Cache/
+
+# Sessions
+writable/session/
+writable/cache/
+writable/logs/
+writable/debugbar/
+
+# Environment Files
+.env.local
+.env.*.local
