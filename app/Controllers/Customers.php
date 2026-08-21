@@ -19,6 +19,32 @@ class Customers extends BaseController
 
     public function index()
     {
+       $rules = [
+    'search' => [
+        'rules'  => 'permit_empty|regex_match[/^[a-zA-Z0-9@.\s]*$/]|max_length[100]',
+        'errors' => [
+            'regex_match' => 'Search field can contain only letters, numbers, and spaces.'
+        ]
+    ],
+    'city' => [
+        'rules'  => 'permit_empty|regex_match[/^[a-zA-Z\s]*$/]|max_length[50]',
+        'errors' => [
+            'regex_match' => 'City can contain only letters and spaces.'
+        ]
+    ],
+    'status' => [
+        'rules' => 'permit_empty|in_list[active,inactive,pending]'
+    ]
+];
+
+if (! $this->validate($rules)) {
+    return redirect()
+        ->to(base_url('customers'))
+        ->withInput()
+        ->with('errors', $this->validator->getErrors());
+}
+
+
         $search = $this->request->getGet('search');
         $status = $this->request->getGet('status');
         $city = $this->request->getGet('city');
@@ -62,6 +88,23 @@ class Customers extends BaseController
 
     public function store()
     {
+
+        $rules = [
+        'name'    => 'required|min_length[2]|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+        'email' => 'required|valid_email|max_length[150]|is_unique[customers.email]',
+        'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]',
+        'company' => 'permit_empty|max_length[150]',
+        'city'    => 'permit_empty|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+        'status'  => 'required|in_list[active,inactive,pending]',
+        'notes'   => 'permit_empty|max_length[1000]',
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
+        }
+
         $data = [
             'name' => $this->request->getPost('name'),
             'email' => $this->request->getPost('email'),
@@ -78,7 +121,8 @@ class Customers extends BaseController
                 'customer_id' => $this->customerModel->getInsertID(),
                 'action' => 'created',
                 'description' => 'Customer created',
-                'user_id' => session()->get('user_id')
+                'user_id' => session()->get('user_id'),
+                'created_at'  => date('Y-m-d H:i:s')
             ]);
 
             return redirect()->to('/customers')->with('success', 'Customer created successfully');
@@ -89,6 +133,10 @@ class Customers extends BaseController
 
     public function edit($id)
     {
+        if (!is_numeric($id)) {
+            return redirect()->to('/customers')->with('error', 'Invalid customer ID');
+        }
+
         $customer = $this->customerModel->find($id);
 
         if (!$customer) {
@@ -104,6 +152,22 @@ class Customers extends BaseController
 
     public function update($id)
     {
+        $rules = [
+    'name'    => 'required|min_length[2]|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+    'email' => 'required|valid_email|max_length[150]|is_unique[customers.email,id,' . $id . ']',
+    'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]',
+    'company' => 'permit_empty|max_length[150]',
+    'city'    => 'permit_empty|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+    'status'  => 'required|in_list[active,inactive,pending]',
+    'notes'   => 'permit_empty|max_length[1000]',
+];
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
+        }
+
+
         $customer = $this->customerModel->find($id);
 
         if (!$customer) {
@@ -126,7 +190,8 @@ class Customers extends BaseController
                 'customer_id' => $id,
                 'action' => 'updated',
                 'description' => 'Customer information updated',
-                'user_id' => session()->get('user_id')
+                'user_id' => session()->get('user_id'),
+                'created_at' => date('Y-m-d H:i:s')
             ]);
 
             return redirect()->to('/customers')->with('success', 'Customer updated successfully');

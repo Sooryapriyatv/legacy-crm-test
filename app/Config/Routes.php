@@ -22,7 +22,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->get('/customers/create', 'Customers::create');
     $routes->post('/customers/store', 'Customers::store');
     $routes->get('/customers/view/(:num)', 'Customers::view/$1');
-    $routes->get('/customers/edit/(:num)', 'Customers::edit/$1');
+    $routes->get('/customers/edit/(:any)', 'Customers::edit/$1');
     $routes->post('/customers/update/(:num)', 'Customers::update/$1');
     $routes->get('/customers/delete/(:num)', 'Customers::delete/$1');
     $routes->get('/customers/export', 'Customers::export');

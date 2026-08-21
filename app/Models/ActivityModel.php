@@ -16,7 +16,8 @@ class ActivityModel extends Model
         'customer_id',
         'action',
         'description',
-        'user_id'
+        'user_id',
+        'created_at',
     ];
 
     protected $useTimestamps = false;

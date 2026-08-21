@@ -12,30 +12,54 @@
     </div>
 </div>
 
+<?php if (session()->getFlashdata('errors')): ?>
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                <li><?= esc($error) ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+<?php endif; ?>
 <!-- Search & Filter Form -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" action="<?= base_url('customers') ?>" class="row g-3">
-            <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Search name or email..." value="<?= $search ?? '' ?>">
-            </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select">
-                    <option value="">All Status</option>
-                    <option value="active" <?= isset($status) && $status == 'active' ? 'selected' : '' ?>>Active</option>
-                    <option value="inactive" <?= isset($status) && $status == 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                    <option value="pending" <?= isset($status) && $status == 'pending' ? 'selected' : '' ?>>Pending</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="city" class="form-control" placeholder="Filter by city..." value="<?= $city ?? '' ?>">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Filter
-                </button>
-            </div>
-        </form>
+       <form method="GET" action="<?= base_url('customers') ?>" class="row g-3" id="filterForm">
+    <div class="col-md-4">
+        <input
+            type="text"
+            name="search"
+            class="form-control"
+            placeholder="Search name or email..."
+            value="<?= esc($search ?? '') ?>"
+            maxlength="100">
+    </div>
+
+    <div class="col-md-3">
+        <select name="status" class="form-select">
+            <option value="">All Status</option>
+            <option value="active" <?= isset($status) && $status == 'active' ? 'selected' : '' ?>>Active</option>
+            <option value="inactive" <?= isset($status) && $status == 'inactive' ? 'selected' : '' ?>>Inactive</option>
+            <option value="pending" <?= isset($status) && $status == 'pending' ? 'selected' : '' ?>>Pending</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <input
+            type="text"
+            name="city"
+            class="form-control"
+            placeholder="Filter by city..."
+            value="<?= esc($city ?? '') ?>"
+            maxlength="50">
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-search"></i> Filter
+        </button>
+    </div>
+</form>
     </div>
 </div>
 
