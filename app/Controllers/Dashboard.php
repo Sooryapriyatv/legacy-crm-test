@@ -11,10 +11,13 @@ class Dashboard extends BaseController
     {
         $customerModel = new CustomerModel();
 
+        $totalCustomers = $customerModel->countAllResults();
+        $activeCustomers = $customerModel->where('status', 'active')->countAllResults();    
+        $recentCustomers = $customerModel->orderBy('created_at', 'DESC')->limit(5)->findAll();
         $data = [
-            'total_customers' => 0,
-            'active_customers' => 0,
-            'recent_customers' => $customerModel->orderBy('created_at', 'DESC')->limit(5)->find()
+            'total_customers' => $totalCustomers,
+            'active_customers' => $activeCustomers,
+            'recent_customers' => $recentCustomers
         ];
 
         return view('dashboard/index', $data);
