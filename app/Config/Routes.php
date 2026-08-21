@@ -27,3 +27,23 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->get('/customers/delete/(:num)', 'Customers::delete/$1');
     $routes->get('/customers/export', 'Customers::export');
 });
+
+$routes->group('api', function ($routes) {
+
+    // Authentication
+    $routes->post('login', 'Api\Auth::login');
+
+    // Customer API
+    $routes->group('customers', ['filter' => 'jwt'], function ($routes) {
+
+        $routes->get('/', 'Api\Customers::index');
+
+        $routes->get('(:num)', 'Api\Customers::show/$1');
+
+        $routes->post('/', 'Api\Customers::create');
+
+        $routes->put('(:num)', 'Api\Customers::update/$1');
+
+        $routes->delete('(:num)', 'Api\Customers::delete/$1');
+    });
+});
