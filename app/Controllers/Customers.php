@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\CustomerModel;
 use App\Models\ActivityModel;
+use App\Services\EmailService;
 
 class Customers extends BaseController
 {
@@ -124,6 +125,10 @@ if (! $this->validate($rules)) {
                 'user_id' => session()->get('user_id'),
                 'created_at'  => date('Y-m-d H:i:s')
             ]);
+
+            // Email failure will NOT break customer creation.
+    $emailService = new EmailService();
+    $emailService->sendWelcomeEmail($data);
 
             return redirect()->to('/customers')->with('success', 'Customer created successfully');
         }
