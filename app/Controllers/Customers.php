@@ -143,7 +143,7 @@ class Customers extends BaseController
             return redirect()->to('/customers')->with('error', 'Customer not found');
         }
 
-        // $this->customerModel->delete($id);
+        $this->customerModel->delete($id);
 
         return redirect()->to('/customers')->with('success', 'Customer deleted successfully');
     }
