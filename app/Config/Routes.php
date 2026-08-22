@@ -17,6 +17,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     // Dashboard
     $routes->get('/dashboard', 'Dashboard::index');
     $routes->get('/access-denied', 'Dashboard::accessDenied');
+    $routes->get('dashboard/refresh', 'Dashboard::refreshCache');
 
     // Customers
     $routes->get('/customers', 'Customers::index');
