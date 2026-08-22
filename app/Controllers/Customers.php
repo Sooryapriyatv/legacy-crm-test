@@ -338,87 +338,131 @@ public function index()
 
     public function export()
     {
-        $role = session()->get('role');
-        $userId = session()->get('user_id');
-        $builder = $this->customerModel;
+        try {
 
-        if ($role === 'sales') {
-            $builder->where('assigned_to', $userId);
-        } elseif ($role !== 'manager' && $role !== 'admin') {
-            $builder->where('id', 0);
-        }
+            $role = session()->get('role');
+            $userId = session()->get('user_id');
 
-        $customers = $builder->findAll();
-
-        $filename = 'customers_' . date('Y-m-d') . '.csv';
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-
-        $output = fopen('php://output', 'w');
-
-        fputcsv($output, ['ID', 'Name', 'Email', 'Phone', 'Company', 'City', 'Status']);
-
-        // CSV Data
-        foreach ($customers as $customer) {
-            fputcsv($output, [
-                $customer['id'],
-                $customer['name'],
-                $customer['email'],
-                $customer['phone'],
-                $customer['company'],
-                $customer['city'],
-                $customer['status']
-            ]);
-        }
-
-        fclose($output);
-        exit;
-    }
-
-
-    public function bulkDelete()
-        {
-            // Only admin can bulk delete
-            if (session()->get('role') !== 'admin') {
+            if (empty($userId) || empty($role)) {
                 return redirect()
-                    ->to('/customers')
-                    ->with('error', 'You are not authorized to delete customers.');
+                    ->to('/login')
+                    ->with('error', 'Please login to export customers.');
             }
 
-            $customerIds = $this->request->getPost('customer_ids');
+            $builder = $this->customerModel;
 
-            if (empty($customerIds) || !is_array($customerIds)) {
-                return redirect()
-                    ->to('/customers')
-                    ->with('error', 'Please select at least one customer.');
+            if ($role === 'sales') {
+                $builder->where('assigned_to', $userId);
+            } elseif ($role !== 'manager' && $role !== 'admin') {
+                $builder->where('id', 0);
             }
 
-            // Convert IDs to integers
-            $customerIds = array_map('intval', $customerIds);
+            $customers = $builder->findAll();
 
-            // Remove invalid IDs
-            $customerIds = array_filter(
-                $customerIds,
-                fn($id) => $id > 0
+            if (empty($customers)) {
+                return redirect()
+                    ->to('/customers')
+                    ->with('error', 'No customers available to export.');
+            }
+
+            $filename = 'customers_' . date('Y-m-d_H-i-s') . '.csv';
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+            $output = fopen('php://output', 'w');
+
+            if ($output === false) {
+                log_message(
+                    'error',
+                    'Customer export failed: Unable to open output stream.'
+                );
+
+                return redirect()
+                    ->to('/customers')
+                    ->with('error', 'Unable to generate CSV file.');
+            }
+
+            fputcsv($output, ['ID', 'Name', 'Email', 'Phone', 'Company', 'City', 'Status']);
+
+            // CSV Data
+            foreach ($customers as $customer) {
+                fputcsv($output, [
+                    $customer['id'],
+                    $customer['name'],
+                    $customer['email'],
+                    $customer['phone'],
+                    $customer['company'],
+                    $customer['city'],
+                    $customer['status']
+                ]);
+            }
+
+            fclose($output);
+            exit;
+
+        } catch (\Throwable $e) {
+
+            log_message(
+                'error',
+                'Customer export exception: ' . $e->getMessage()
             );
-
-            if (empty($customerIds)) {
-                return redirect()
-                    ->to('/customers')
-                    ->with('error', 'Invalid customer selection.');
-            }
-
-            $customerModel = new CustomerModel();
-
-            $customerModel
-                ->whereIn('id', $customerIds)
-                ->delete();
 
             return redirect()
                 ->to('/customers')
                 ->with(
-                    'success',
-                    count($customerIds) . ' customer(s) deleted successfully.'
+                    'error',
+                    'An error occurred while exporting customers. Please try again.'
                 );
         }
+        }
+
+
+        public function bulkDelete()
+            {
+                // Only admin can bulk delete
+                if (session()->get('role') !== 'admin') {
+                    return redirect()
+                        ->to('/customers')
+                        ->with('error', 'You are not authorized to delete customers.');
+                }
+
+                $customerIds = $this->request->getPost('customer_ids');
+
+                if (empty($customerIds) || !is_array($customerIds)) {
+                    return redirect()
+                        ->to('/customers')
+                        ->with('error', 'Please select at least one customer.');
+                }
+
+                // Convert IDs to integers
+                $customerIds = array_map('intval', $customerIds);
+
+                // Remove invalid IDs
+                $customerIds = array_filter(
+                    $customerIds,
+                    fn($id) => $id > 0
+                );
+
+                if (empty($customerIds)) {
+                    return redirect()
+                        ->to('/customers')
+                        ->with('error', 'Invalid customer selection.');
+                }
+
+                $customerModel = new CustomerModel();
+
+                $customerModel
+                    ->whereIn('id', $customerIds)
+                    ->delete();
+
+                return redirect()
+                    ->to('/customers')
+                    ->with(
+                        'success',
+                        count($customerIds) . ' customer(s) deleted successfully.'
+                    );
+            }
 }
