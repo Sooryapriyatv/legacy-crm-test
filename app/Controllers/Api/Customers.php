@@ -4,15 +4,41 @@ namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
 use App\Models\CustomerModel;
+use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class Customers extends BaseController
 {
     protected CustomerModel $customerModel;
+    protected UserModel $userModel;
 
     public function __construct()
     {
         $this->customerModel = new CustomerModel();
+        $this->userModel = new UserModel();
+    }
+
+    protected function currentUser(): ?array
+    {
+        return $this->userModel->find((int) ($this->request->jwtUser->sub ?? 0));
+    }
+
+    protected function canEdit(array $customer, array $user): bool
+    {
+        return $user['role'] === 'admin'
+            || ($user['role'] === 'sales' && (int) $customer['assigned_to'] === (int) $user['id'])
+            || ($user['role'] === 'manager' && $this->userModel
+                ->where('id', $customer['assigned_to'] ?? 0)
+                ->where('manager_id', $user['id'])
+                ->first() !== null);
+    }
+
+    protected function denied()
+    {
+        return $this->response->setStatusCode(403)->setJSON([
+            'status' => false,
+            'message' => 'Access denied.'
+        ]);
     }
 
     /**
@@ -20,6 +46,8 @@ class Customers extends BaseController
      */
     public function index()
     {
+        $user = $this->currentUser();
+        if (!$user) return $this->denied();
         $page = max(1, (int) ($this->request->getGet('page') ?? 1));
 
         $perPage = (int) ($this->request->getGet('per_page') ?? 20);
@@ -59,6 +87,12 @@ class Customers extends BaseController
             $builder->where('status', $status);
         }
 
+        if ($user['role'] === 'sales') {
+            $builder->where('assigned_to', $user['id']);
+        } elseif (!in_array($user['role'], ['admin', 'manager'], true)) {
+            return $this->denied();
+        }
+
         if ($city !== null && $city !== '') {
             $builder->where('city', $city);
         }
@@ -88,6 +122,8 @@ class Customers extends BaseController
      */
     public function show($id)
     {
+        $user = $this->currentUser();
+        if (!$user) return $this->denied();
         $customer = $this->customerModel->find($id);
 
         if (!$customer) {
@@ -97,6 +133,10 @@ class Customers extends BaseController
                     'status' => false,
                     'message' => 'Customer not found.'
                 ]);
+        }
+
+        if ($user['role'] === 'sales' && (int) $customer['assigned_to'] !== (int) $user['id']) {
+            return $this->denied();
         }
 
         return $this->response
@@ -112,6 +152,8 @@ class Customers extends BaseController
      */
     public function create()
     {
+        $user = $this->currentUser();
+        if (!$user || $user['role'] !== 'admin') return $this->denied();
         $data = $this->request->getJSON(true);
 
         if (!is_array($data)) {
@@ -151,6 +193,8 @@ class Customers extends BaseController
      */
     public function update($id)
     {
+        $user = $this->currentUser();
+        if (!$user) return $this->denied();
         $customer = $this->customerModel->find($id);
 
         if (!$customer) {
@@ -161,6 +205,8 @@ class Customers extends BaseController
                     'message' => 'Customer not found.'
                 ]);
         }
+
+        if (!$this->canEdit($customer, $user)) return $this->denied();
 
         $data = $this->request->getJSON(true);
 
@@ -197,6 +243,8 @@ class Customers extends BaseController
      */
     public function delete($id)
     {
+        $user = $this->currentUser();
+        if (!$user || $user['role'] !== 'admin') return $this->denied();
         $customer = $this->customerModel->find($id);
 
         if (!$customer) {

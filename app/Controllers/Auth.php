@@ -3,9 +3,17 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\UserModel;
 
 class Auth extends BaseController
 {
+    protected $userModel;
+
+    public function __construct()
+    {
+       $this->userModel = new UserModel();
+    }
+
     public function login()
     {
         if (session()->get('logged_in')) {
@@ -20,17 +28,32 @@ class Auth extends BaseController
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
-        // Simple hardcoded authentication (for demo purposes)
-        if ($username === 'admin' && $password === 'admin123') {
-            session()->set([
-                'user_id' => 1,
-                'username' => 'admin',
-                'logged_in' => true
-            ]);
-            return redirect()->to('/dashboard')->with('success', 'Welcome back!');
+        $user = $this->userModel
+            ->where('email', $username)
+            ->first();
+
+        if (!$user) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Invalid credentials');
         }
 
-        return redirect()->back()->with('error', 'Invalid credentials');
+        // Simple hardcoded authentication (for demo purposes)
+        if (!password_verify($password, $user['password'])) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Invalid credentials');
+        }
+
+        session()->set([
+            'user_id'   => $user['id'],
+            'username'  => $user['name'],
+            'role'      => $user['role'],
+            'logged_in' => true,
+        ]);
+            return redirect()->to('/dashboard')->with('success', 'Welcome back!');
+
+
     }
 
     public function logout()

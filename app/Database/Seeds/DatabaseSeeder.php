@@ -8,6 +8,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+        $this->call('RoleUserSeeder');
+
         // Sample customers data
         $customers = [];
         $cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Ahmedabad'];
@@ -48,5 +50,8 @@ class DatabaseSeeder extends Seeder
         $this->db->table('customer_activities')->insertBatch($activities);
 
         echo "Seeded 100 customers and 500 activities successfully!\n";
+
+
+        $this->call('CustomerAssignmentSeeder');
     }
 }

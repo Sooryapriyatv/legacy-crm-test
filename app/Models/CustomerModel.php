@@ -19,7 +19,8 @@ class CustomerModel extends Model
         'company',
         'city',
         'status',
-        'notes'
+        'notes',
+        'assigned_to',
     ];
 
     protected $useTimestamps = true;

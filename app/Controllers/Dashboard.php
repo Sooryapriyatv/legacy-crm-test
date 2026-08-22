@@ -7,6 +7,11 @@ use App\Models\CustomerModel;
 
 class Dashboard extends BaseController
 {
+    public function accessDenied()
+    {
+        return view('errors/access_denied');
+    }
+
     public function index()
     {
         $customerModel = new CustomerModel();

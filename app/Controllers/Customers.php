@@ -5,86 +5,151 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\CustomerModel;
 use App\Models\ActivityModel;
+use App\Models\UserModel;
 use App\Services\EmailService;
 
 class Customers extends BaseController
 {
     protected $customerModel;
     protected $activityModel;
+    protected $userModel;
 
     public function __construct()
     {
         $this->customerModel = new CustomerModel();
         $this->activityModel = new ActivityModel();
+        $this->userModel = new UserModel();
     }
 
-    public function index()
+    protected function canEdit(array $customer): bool
     {
-       $rules = [
-    'search' => [
-        'rules'  => 'permit_empty|regex_match[/^[a-zA-Z0-9@.\s]*$/]|max_length[100]',
-        'errors' => [
-            'regex_match' => 'Search field can contain only letters, numbers, and spaces.'
-        ]
-    ],
-    'city' => [
-        'rules'  => 'permit_empty|regex_match[/^[a-zA-Z\s]*$/]|max_length[50]',
-        'errors' => [
-            'regex_match' => 'City can contain only letters and spaces.'
-        ]
-    ],
-    'status' => [
-        'rules' => 'permit_empty|in_list[active,inactive,pending]'
-    ]
-];
+        $role = session()->get('role');
+        $userId = (int) session()->get('user_id');
 
-if (! $this->validate($rules)) {
-    return redirect()
-        ->to(base_url('customers'))
-        ->withInput()
-        ->with('errors', $this->validator->getErrors());
-}
-
-
-        $search = $this->request->getGet('search');
-        $status = $this->request->getGet('status');
-        $city = $this->request->getGet('city');
-
-        $builder = $this->customerModel;
-
-        if(!empty($search)) {
-            $builder->groupStart()
-                ->like('name', $search)
-                ->orLike('email', $search)
-                ->groupEnd();
+        if ($role === 'admin') {
+            return true;
         }
 
-        if(!empty($status)) {
-            $builder->where('status', $status);
+        if ($role === 'sales') {
+            return (int) ($customer['assigned_to'] ?? 0) === $userId;
         }
 
-        if(!empty($city)) {
-            $builder->where('city', $city);
+        if ($role === 'manager') {
+            return $this->userModel
+                ->where('id', $customer['assigned_to'] ?? 0)
+                ->where('manager_id', $userId)
+                ->first() !== null;
         }
 
-        $customers = $this->customerModel
-            ->orderBy('id', 'DESC')
-            ->paginate(20);
-
-        $data = [
-            'customers' => $customers,
-            'pager' => $this->customerModel->pager,
-            'search' => $search,
-            'status' => $status,
-            'city' => $city
-        ];
-
-        return view('customers/index', $data);
+        return false;
     }
+
+    protected function canView(array $customer): bool
+    {
+        $role = session()->get('role');
+
+        return $role === 'admin'
+            || $role === 'manager'
+            || $this->canEdit($customer);
+    }
+
+    protected function denyAccess()
+    {
+        return redirect()->to('/access-denied');
+    }
+
+public function index()
+{
+    $rules = [
+        'search' => [
+            'rules'  => 'permit_empty|regex_match[/^[a-zA-Z0-9@.\s]*$/]|max_length[100]',
+        ],
+        'city' => [
+            'rules'  => 'permit_empty|regex_match[/^[a-zA-Z\s]*$/]|max_length[50]',
+        ],
+        'status' => [
+            'rules' => 'permit_empty|in_list[active,inactive,pending]'
+        ]
+    ];
+
+    if (! $this->validate($rules)) {
+        return redirect()
+            ->to(base_url('customers'))
+            ->withInput()
+            ->with('errors', $this->validator->getErrors());
+    }
+
+    $search = $this->request->getGet('search');
+    $status = $this->request->getGet('status');
+    $city   = $this->request->getGet('city');
+
+    $role   = session()->get('role');
+    $userId = session()->get('user_id');
+
+    $builder = $this->customerModel;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role Filtering
+    |--------------------------------------------------------------------------
+    */
+    if ($role === 'sales') {
+        $builder->where('assigned_to', $userId);
+    } elseif ($role !== 'manager' && $role !== 'admin') {
+        $builder->where('id', 0);
+    }
+
+    // Manager can see all customers
+    // Admin can see all customers
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search Filters
+    |--------------------------------------------------------------------------
+    */
+    if (!empty($search)) {
+        $builder->groupStart()
+            ->like('name', $search)
+            ->orLike('email', $search)
+            ->groupEnd();
+    }
+
+    if (!empty($status)) {
+        $builder->where('status', $status);
+    }
+
+    if (!empty($city)) {
+        $builder->where('city', $city);
+    }
+
+    $customers = $builder
+        ->orderBy('id', 'DESC')
+        ->paginate(20);
+
+    $editableCustomerIds = [];
+    foreach ($customers as $customer) {
+        if ($this->canEdit($customer)) {
+            $editableCustomerIds[] = (int) $customer['id'];
+        }
+    }
+
+    $data = [
+        'customers' => $customers,
+        'pager'     => $builder->pager,
+        'search'    => $search,
+        'status'    => $status,
+        'city'      => $city,
+        'editableCustomerIds' => $editableCustomerIds,
+    ];
+
+    return view('customers/index', $data);
+}
 
     public function create()
     {
-        return view('customers/create');
+        return view('customers/create', [
+            'users' => $this->userModel->whereIn('role', ['manager', 'sales'])->findAll(),
+        ]);
     }
 
     public function store()
@@ -113,7 +178,10 @@ if (! $this->validate($rules)) {
             'company' => $this->request->getPost('company'),
             'city' => $this->request->getPost('city'),
             'status' => $this->request->getPost('status') ?? 'active',
-            'notes' => $this->request->getPost('notes')
+            'notes' => $this->request->getPost('notes'),
+            'assigned_to' => session()->get('role') === 'sales'
+                ? session()->get('user_id')
+                : $this->request->getPost('assigned_to')
         ];
 
         if ($this->customerModel->insert($data)) {
@@ -148,9 +216,21 @@ if (! $this->validate($rules)) {
             return redirect()->to('/customers')->with('error', 'Customer not found');
         }
 
+        if (!$this->canView($customer)) {
+            return $this->denyAccess();
+        }
+
+        if (!$this->canEdit($customer)) {
+            return $this->denyAccess();
+        }
+
         $data = [
             'customer' => $customer
         ];
+
+        $data['users'] = $this->userModel
+            ->whereIn('role', ['manager', 'sales'])
+            ->findAll();
 
         return view('customers/edit', $data);
     }
@@ -179,6 +259,10 @@ if (! $this->validate($rules)) {
             return redirect()->to('/customers')->with('error', 'Customer not found');
         }
 
+        if (!$this->canEdit($customer)) {
+            return $this->denyAccess();
+        }
+
         $data = [
             'name' => $this->request->getPost('name'),
             'email' => $this->request->getPost('email'),
@@ -188,6 +272,10 @@ if (! $this->validate($rules)) {
             'status' => $this->request->getPost('status'),
             'notes' => $this->request->getPost('notes')
         ];
+
+        if (session()->get('role') === 'admin') {
+            $data['assigned_to'] = $this->request->getPost('assigned_to');
+        }
 
         if ($this->customerModel->update($customer, $data)) {
             // Log activity
@@ -213,6 +301,10 @@ if (! $this->validate($rules)) {
             return redirect()->to('/customers')->with('error', 'Customer not found');
         }
 
+        if (!$this->canEdit($customer)) {
+            return $this->denyAccess();
+        }
+
         $this->customerModel->delete($id);
 
         return redirect()->to('/customers')->with('success', 'Customer deleted successfully');
@@ -224,6 +316,10 @@ if (! $this->validate($rules)) {
 
         if (!$customer) {
             return redirect()->to('/customers')->with('error', 'Customer not found');
+        }
+
+        if (!$this->canView($customer)) {
+            return $this->denyAccess();
         }
 
         $activities = $this->activityModel
@@ -242,7 +338,17 @@ if (! $this->validate($rules)) {
 
     public function export()
     {
-        $customers = $this->customerModel->findAll();
+        $role = session()->get('role');
+        $userId = session()->get('user_id');
+        $builder = $this->customerModel;
+
+        if ($role === 'sales') {
+            $builder->where('assigned_to', $userId);
+        } elseif ($role !== 'manager' && $role !== 'admin') {
+            $builder->where('id', 0);
+        }
+
+        $customers = $builder->findAll();
 
         $filename = 'customers_' . date('Y-m-d') . '.csv';
         header('Content-Type: text/csv');

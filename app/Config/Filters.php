@@ -17,6 +17,7 @@ class Filters extends BaseFilters
         'performance'   => \CodeIgniter\Filters\PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,
         'jwt' => \App\Filters\JwtAuthFilter::class,
+        'rolecheck' => \App\Filters\RoleCheck::class,
     ];
 
     public array $globals = [

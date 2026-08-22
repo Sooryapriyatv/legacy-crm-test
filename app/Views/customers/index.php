@@ -6,9 +6,11 @@
         <a href="<?= base_url('customers/export') ?>" class="btn btn-success">
             <i class="bi bi-download"></i> Export CSV
         </a>
+        <?php if (session()->get('role') === 'admin'): ?>
         <a href="<?= base_url('customers/create') ?>" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Customer
         </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -116,12 +118,19 @@
                                 <a href="<?= base_url('customers/view/' . $customer['id']) ?>" class="btn btn-sm btn-info" title="View">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                <?php
+                                $canEdit = in_array((int) $customer['id'], $editableCustomerIds ?? [], true);
+                                ?>
+                                <?php if ($canEdit): ?>
                                 <a href="<?= base_url('customers/edit/' . $customer['id']) ?>" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <?php endif; ?>
+                                <?php if (session()->get('role') === 'admin'): ?>
                                 <a href="<?= base_url('customers/delete/' . $customer['id']) ?>" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
                                     <i class="bi bi-trash"></i>
                                 </a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>

@@ -25,6 +25,7 @@ class JwtService
             'exp'   => $expiration,
             'sub'   => (string) $user['id'],
             'email' => $user['email'],
+            'role'  => $user['role'],
         ];
 
         $token = JWT::encode(
