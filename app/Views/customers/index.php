@@ -42,7 +42,7 @@
         </select>
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-2">
         <input
             type="text"
             name="city"
@@ -52,10 +52,16 @@
             maxlength="50">
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-1">
         <button type="submit" class="btn btn-primary w-100">
             <i class="bi bi-search"></i> Filter
         </button>
+    </div>
+
+    <div class="col-md-2">
+        <a href="<?= base_url('customers') ?>" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+        </a>
     </div>
 </form>
     </div>
