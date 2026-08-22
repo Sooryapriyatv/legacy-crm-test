@@ -76,9 +76,12 @@
                         <i class="bi bi-people"></i> Customers
                     </a>
                     <hr class="text-white">
-                    <a class="nav-link" href="<?= base_url('logout') ?>">
-                        <i class="bi bi-box-arrow-right"></i> Logout
-                    </a>
+                    <form action="<?= base_url('logout') ?>" method="POST" class="m-0">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </form>
                 </nav>
             </div>
             <?php endif; ?>
@@ -119,9 +122,12 @@
                             <a class="nav-link text-white px-4 py-3 <?= strpos(uri_string(), 'customers') !== false ? 'active bg-primary' : '' ?>" href="<?= base_url('customers') ?>">
                                 <i class="bi bi-people"></i> Customers
                             </a>
-                            <a class="nav-link text-white px-4 py-3" href="<?= base_url('logout') ?>">
-                                <i class="bi bi-box-arrow-right"></i> Logout
-                            </a>
+                            <form action="<?= base_url('logout') ?>" method="POST" class="m-0">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="nav-link text-white px-4 py-3 border-0 bg-transparent w-100 text-start">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </button>
+                            </form>
                         </nav>
                     </div>
                 </div>

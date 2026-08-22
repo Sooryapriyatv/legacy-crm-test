@@ -7,9 +7,12 @@
     <a href="<?= base_url('customers/edit/' . $customer['id']) ?>" class="btn btn-warning">
         <i class="bi bi-pencil"></i> Edit
     </a>
-    <a href="<?= base_url('customers/delete/' . $customer['id']) ?>" class="btn btn-danger" onclick="return confirm('Are you sure?')">
-        <i class="bi bi-trash"></i> Delete
-    </a>
+    <form action="<?= base_url('customers/delete/' . $customer['id']) ?>" method="POST" class="d-inline">
+        <?= csrf_field() ?>
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">
+            <i class="bi bi-trash"></i> Delete
+        </button>
+    </form>
 </div>
 
 <div class="row">

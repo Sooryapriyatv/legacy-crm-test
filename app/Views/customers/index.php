@@ -168,9 +168,9 @@
                                 </a>
                                 <?php endif; ?>
                                 <?php if (session()->get('role') === 'admin'): ?>
-                                <a href="<?= base_url('customers/delete/' . $customer['id']) ?>" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                <button type="submit" formaction="<?= base_url('customers/delete/' . $customer['id']) ?>" formmethod="POST" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
                                     <i class="bi bi-trash"></i>
-                                </a>
+                                </button>
                                 <?php endif; ?>
                             </td>
                         </tr>

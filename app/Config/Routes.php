@@ -10,7 +10,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Auth::login');
 $routes->get('/login', 'Auth::login');
 $routes->post('/authenticate', 'Auth::authenticate');
-$routes->get('/logout', 'Auth::logout');
+$routes->post('/logout', 'Auth::logout');
 
 // Protected Routes (require login)
 $routes->group('', ['filter' => 'auth'], function($routes) {
@@ -26,7 +26,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->get('/customers/view/(:num)', 'Customers::view/$1');
     $routes->get('/customers/edit/(:any)', 'Customers::edit/$1');
     $routes->post('/customers/update/(:num)', 'Customers::update/$1');
-    $routes->get('/customers/delete/(:num)', 'Customers::delete/$1', ['filter' => 'rolecheck:admin']);
+    $routes->post('/customers/delete/(:num)', 'Customers::delete/$1', ['filter' => 'rolecheck:admin']);
     $routes->get('/customers/export', 'Customers::export');
     $routes->post('customers/bulk-delete', 'Customers::bulkDelete');
 });
