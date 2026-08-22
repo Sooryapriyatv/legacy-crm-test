@@ -12,6 +12,9 @@
             min-height: 100vh;
             background: #2c3e50;
         }
+        .mobile-menu {
+            background: #2c3e50;
+        }
         .sidebar .nav-link {
             color: #ecf0f1;
             padding: 12px 20px;
@@ -60,7 +63,7 @@
         <div class="row">
             <?php if (session()->get('logged_in')): ?>
             <!-- Sidebar -->
-            <div class="col-md-2 p-0 sidebar">
+            <div class="d-none d-md-block col-md-2 p-0 sidebar">
                 <div class="p-3 text-white">
                     <h4><i class="bi bi-Building"></i> CRM System</h4>
                     <small>v2.0 Legacy</small>
@@ -81,16 +84,47 @@
             <?php endif; ?>
 
             <!-- Main Content -->
-            <div class="col-md-<?= session()->get('logged_in') ? '10' : '12' ?>">
+            <div class="col-12 col-md-<?= session()->get('logged_in') ? '10' : '12' ?>">
                 <?php if (session()->get('logged_in')): ?>
                 <!-- Top Bar -->
                 <nav class="navbar navbar-light bg-light border-bottom">
                     <div class="container-fluid">
+                        <button
+                            class="navbar-toggler d-md-none me-2"
+                            type="button"
+                            data-bs-toggle="offcanvas"
+                            data-bs-target="#mobileNavigation"
+                            aria-controls="mobileNavigation"
+                            aria-label="Open navigation menu">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
                         <span class="navbar-text">
                             Welcome, <strong><?= session()->get('username') ?></strong>
                         </span>
                     </div>
                 </nav>
+
+                <div class="offcanvas offcanvas-start mobile-menu text-white" tabindex="-1" id="mobileNavigation" aria-labelledby="mobileNavigationLabel">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="mobileNavigationLabel">
+                            <i class="bi bi-building"></i> CRM System
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close navigation menu"></button>
+                    </div>
+                    <div class="offcanvas-body p-0">
+                        <nav class="nav flex-column">
+                            <a class="nav-link text-white px-4 py-3 <?= uri_string() == 'dashboard' ? 'active bg-primary' : '' ?>" href="<?= base_url('dashboard') ?>">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                            <a class="nav-link text-white px-4 py-3 <?= strpos(uri_string(), 'customers') !== false ? 'active bg-primary' : '' ?>" href="<?= base_url('customers') ?>">
+                                <i class="bi bi-people"></i> Customers
+                            </a>
+                            <a class="nav-link text-white px-4 py-3" href="<?= base_url('logout') ?>">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </nav>
+                    </div>
+                </div>
                 <?php endif; ?>
 
                 <div class="content-wrapper">
