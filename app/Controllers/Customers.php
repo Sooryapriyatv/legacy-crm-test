@@ -158,7 +158,7 @@ public function index()
         $rules = [
         'name'    => 'required|min_length[2]|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
         'email' => 'required|valid_email|max_length[150]|is_unique[customers.email]',
-        'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]',
+        'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]|is_unique[customers.phone]',
         'company' => 'permit_empty|max_length[150]',
         'city'    => 'permit_empty|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
         'status'  => 'required|in_list[active,inactive,pending]',
@@ -256,7 +256,7 @@ public function index()
         $rules = [
     'name'    => 'required|min_length[2]|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
     'email' => 'required|valid_email|max_length[150]|is_unique[customers.email,id,' . $id . ']',
-    'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]',
+    'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]|is_unique[customers.phone,id,' . $id . ']',
     'company' => 'permit_empty|max_length[150]',
     'city'    => 'permit_empty|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
     'status'  => 'required|in_list[active,inactive,pending]',

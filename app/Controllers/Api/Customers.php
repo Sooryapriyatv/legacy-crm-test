@@ -61,6 +61,19 @@ class Customers extends BaseController
         }
 
         $emailQuery = $this->customerModel->where('email', $data['email']);
+        $phone = trim((string) ($data['phone'] ?? ''));
+
+        if ($phone !== '') {
+            $phoneQuery = $this->customerModel->where('phone', $phone);
+            if ($customerId !== null) {
+                $phoneQuery->where('id !=', $customerId);
+            }
+
+            if ($phoneQuery->first()) {
+                return ['phone' => 'The phone field must contain a unique value.'];
+            }
+        }
+
         if ($customerId !== null) {
             $emailQuery->where('id !=', $customerId);
         }
