@@ -14,15 +14,10 @@
     </div>
 </div>
 
-<?php if (session()->getFlashdata('errors')): ?>
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                <li><?= esc($error) ?></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-<?php endif; ?>
+
+
+
+
 <!-- Search & Filter Form -->
 <div class="card mb-4">
     <div class="card-body">
@@ -69,10 +64,46 @@
 <!-- Customers Table -->
 <div class="card">
     <div class="card-body">
+
+            <form
+                method="POST"
+                action="<?= base_url('customers/bulk-delete') ?>"
+                id="bulkDeleteForm"
+            >
+
+                <?= csrf_field() ?>
+
+                <?php if (session()->get('role') === 'admin'): ?>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div>
+                        <span id="selectedCount" class="text-muted">
+                            0 selected
+                        </span>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                        id="bulkDeleteBtn"
+                        disabled
+                    >
+                        <i class="bi bi-trash"></i>
+                        Delete Selected
+                    </button>
+
+                </div>
+        <?php endif; ?>
+
         <div class="table-responsive">
             <table class="table table-hover" id="customersTable">
                 <thead>
                     <tr>
+                        <?php if (session()->get('role') === 'admin'): ?>
+            <th>
+                <input type="checkbox" id="selectAll">
+            </th>
+        <?php endif; ?>
                         <th>ID</th>
                         <th>Name</th>
                         <th>Email</th>
@@ -88,6 +119,16 @@
                     <?php if (!empty($customers)): ?>
                         <?php foreach ($customers as $customer): ?>
                         <tr>
+                            <?php if (session()->get('role') === 'admin'): ?>
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    name="customer_ids[]"
+                                    value="<?= $customer['id'] ?>"
+                                    class="customer-checkbox"
+                                >
+                            </td>
+                            <?php endif; ?>
                             <td><?= $customer['id'] ?></td>
                             <td>
                                 <a href="<?= base_url('customers/view/' . $customer['id']) ?>">
@@ -136,7 +177,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" class="text-center text-muted">No customers found</td>
+                            <td colspan="<?= session()->get('role') === 'admin' ? '10' : '9' ?>" class="text-center text-muted">No customers found</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -150,23 +191,172 @@
             </div>
         <?php endif; ?>
     </div>
+
+                </form>
+
+    </div>
+</div>
+
+
 </div>
 
 <script>
-document.getElementById('customerSearch').addEventListener('keyup', function() {
-    let searchValue = this.value.toLowerCase();
-    let rows = document.querySelectorAll('#customersTable tbody tr');
+document.addEventListener('DOMContentLoaded', function () {
 
-    rows.forEach(function(row) {
-        let name = row.cells[1]?.textContent.toLowerCase() || '';
-        let email = row.cells[2]?.textContent.toLowerCase() || '';
+    /*
+     * Customer search
+     */
+    const customerSearch = document.getElementById('customerSearch');
 
-        if (name.includes(searchValue) || email.includes(searchValue)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+    if (customerSearch) {
+
+        customerSearch.addEventListener('keyup', function () {
+
+            let searchValue = this.value.toLowerCase();
+
+            let rows = document.querySelectorAll(
+                '#customersTable tbody tr'
+            );
+
+            rows.forEach(function (row) {
+
+                let name =
+                    row.cells[1]?.textContent.toLowerCase() || '';
+
+                let email =
+                    row.cells[2]?.textContent.toLowerCase() || '';
+
+                if (
+                    name.includes(searchValue) ||
+                    email.includes(searchValue)
+                ) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+
+            });
+
+        });
+
+    }
+
+
+    /*
+     * Bulk delete
+     */
+    const selectAll =
+        document.getElementById('selectAll');
+
+    const checkboxes =
+        document.querySelectorAll('.customer-checkbox');
+
+    const deleteButton =
+        document.getElementById('bulkDeleteBtn');
+
+    const selectedCount =
+        document.getElementById('selectedCount');
+
+    const bulkDeleteForm =
+        document.getElementById('bulkDeleteForm');
+
+
+    function updateBulkDeleteButton() {
+
+        const selected =
+            document.querySelectorAll(
+                '.customer-checkbox:checked'
+            );
+
+        const count = selected.length;
+
+        if (selectedCount) {
+            selectedCount.textContent =
+                count + ' selected';
         }
+
+        if (deleteButton) {
+            deleteButton.disabled = count === 0;
+        }
+
+        if (selectAll) {
+
+            selectAll.checked =
+                count > 0 &&
+                count === checkboxes.length;
+
+            selectAll.indeterminate =
+                count > 0 &&
+                count < checkboxes.length;
+        }
+    }
+
+
+    /*
+     * Select All
+     */
+    if (selectAll) {
+
+        selectAll.addEventListener('change', function () {
+
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAll.checked;
+            });
+
+            updateBulkDeleteButton();
+        });
+
+    }
+
+
+    /*
+     * Individual checkboxes
+     */
+    checkboxes.forEach(function (checkbox) {
+
+        checkbox.addEventListener('change', function () {
+            updateBulkDeleteButton();
+        });
+
     });
+
+
+    /*
+     * Confirmation
+     */
+    if (bulkDeleteForm) {
+
+        bulkDeleteForm.addEventListener('submit', function (event) {
+
+            const selected =
+                document.querySelectorAll(
+                    '.customer-checkbox:checked'
+                );
+
+            if (selected.length === 0) {
+
+                event.preventDefault();
+
+                alert('Please select at least one customer.');
+
+                return;
+            }
+
+
+            const confirmed = confirm(
+                'Are you sure you want to delete ' +
+                selected.length +
+                ' selected customer(s)?'
+            );
+
+            if (!confirmed) {
+                event.preventDefault();
+            }
+
+        });
+
+    }
+
 });
 </script>
 

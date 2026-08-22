@@ -28,6 +28,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->post('/customers/update/(:num)', 'Customers::update/$1');
     $routes->get('/customers/delete/(:num)', 'Customers::delete/$1', ['filter' => 'rolecheck:admin']);
     $routes->get('/customers/export', 'Customers::export');
+    $routes->post('customers/bulk-delete', 'Customers::bulkDelete');
 });
 
 $routes->group('api', function ($routes) {

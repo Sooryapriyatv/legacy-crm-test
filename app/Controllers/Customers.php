@@ -374,4 +374,51 @@ public function index()
         fclose($output);
         exit;
     }
+
+
+    public function bulkDelete()
+        {
+            // Only admin can bulk delete
+            if (session()->get('role') !== 'admin') {
+                return redirect()
+                    ->to('/customers')
+                    ->with('error', 'You are not authorized to delete customers.');
+            }
+
+            $customerIds = $this->request->getPost('customer_ids');
+
+            if (empty($customerIds) || !is_array($customerIds)) {
+                return redirect()
+                    ->to('/customers')
+                    ->with('error', 'Please select at least one customer.');
+            }
+
+            // Convert IDs to integers
+            $customerIds = array_map('intval', $customerIds);
+
+            // Remove invalid IDs
+            $customerIds = array_filter(
+                $customerIds,
+                fn($id) => $id > 0
+            );
+
+            if (empty($customerIds)) {
+                return redirect()
+                    ->to('/customers')
+                    ->with('error', 'Invalid customer selection.');
+            }
+
+            $customerModel = new CustomerModel();
+
+            $customerModel
+                ->whereIn('id', $customerIds)
+                ->delete();
+
+            return redirect()
+                ->to('/customers')
+                ->with(
+                    'success',
+                    count($customerIds) . ' customer(s) deleted successfully.'
+                );
+        }
 }
