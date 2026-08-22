@@ -285,13 +285,13 @@
                     <?php if (!empty($recent_customers)): ?>
                         <?php foreach ($recent_customers as $customer): ?>
                         <tr>
-                            <td><?= $customer['id'] ?></td>
-                            <td><?= $customer['name'] ?></td>
-                            <td><?= $customer['email'] ?></td>
-                            <td><?= $customer['company'] ?></td>
+                            <td><?= esc($customer['id']) ?></td>
+                            <td><?= esc($customer['name']) ?></td>
+                            <td><?= esc($customer['email']) ?></td>
+                            <td><?= esc($customer['company']) ?></td>
                             <td>
-                                <span class="status-badge status-<?= $customer['status'] ?>">
-                                    <?= ucfirst($customer['status']) ?>
+                                <span class="status-badge status-<?= esc($customer['status']) ?>">
+                                    <?= esc(ucfirst($customer['status'])) ?>
                                 </span>
                             </td>
                             <td><?= date('M d, Y', strtotime($customer['created_at'])) ?></td>

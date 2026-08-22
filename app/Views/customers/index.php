@@ -124,31 +124,31 @@
                                 <input
                                     type="checkbox"
                                     name="customer_ids[]"
-                                    value="<?= $customer['id'] ?>"
+                                    value="<?= esc($customer['id']) ?>"
                                     class="customer-checkbox"
                                 >
                             </td>
                             <?php endif; ?>
-                            <td><?= $customer['id'] ?></td>
+                            <td><?= esc($customer['id']) ?></td>
                             <td>
                                 <a href="<?= base_url('customers/view/' . $customer['id']) ?>">
-                                    <?= $customer['name'] ?>
+                                    <?= esc($customer['name']) ?>
                                 </a>
                             </td>
-                            <td><?= $customer['email'] ?></td>
-                            <td><?= $customer['phone'] ?></td>
-                            <td><?= $customer['company'] ?></td>
-                            <td><?= $customer['city'] ?></td>
+                            <td><?= esc($customer['email']) ?></td>
+                            <td><?= esc($customer['phone']) ?></td>
+                            <td><?= esc($customer['company']) ?></td>
+                            <td><?= esc($customer['city']) ?></td>
                             <td>
-                                <span class="status-badge status-<?= $customer['status'] ?>">
-                                    <?= $customer['status'] ?>
+                                <span class="status-badge status-<?= esc($customer['status']) ?>">
+                                    <?= esc($customer['status']) ?>
                                 </span>
                             </td>
                             <td>
                                 <?php if (!empty($customer['activities'])): ?>
                                     <small class="text-muted">
                                         <?php foreach (array_slice($customer['activities'], 0, 2) as $activity): ?>
-                                            <div><?= $activity['action'] ?>: <?= $activity['description'] ?></div>
+                                            <div><?= esc($activity['action']) ?>: <?= esc($activity['description']) ?></div>
                                         <?php endforeach; ?>
                                     </small>
                                 <?php else: ?>

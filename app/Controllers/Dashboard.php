@@ -16,9 +16,12 @@ class Dashboard extends BaseController
     public function index()
     {
         $cache = cache();
+        $role = session()->get('role');
+        $userId = (int) session()->get('user_id');
+        $cacheKey = 'dashboard_data_' . $role . '_' . $userId;
 
         // Check cached dashboard data
-        $dashboardData = $cache->get('dashboard_data');
+        $dashboardData = $cache->get($cacheKey);
 
         if ($dashboardData !== null) {
             // log_message('debug', 'DASHBOARD CACHE HIT');
@@ -30,29 +33,37 @@ class Dashboard extends BaseController
         $customerModel = new CustomerModel();
         $activityModel = new ActivityModel();
 
-        $totalCustomers = $customerModel->countAllResults();
-        $activeCustomers = $customerModel->where('status', 'active')->countAllResults();    
-        $recentCustomers = $customerModel->orderBy('created_at', 'DESC')->limit(5)->findAll();
+        $scopeCustomers = static function ($model) use ($role, $userId) {
+            if ($role === 'sales') {
+                $model->where('assigned_to', $userId);
+            }
+
+            return $model;
+        };
+
+        $totalCustomers = $scopeCustomers($customerModel)->countAllResults();
+        $activeCustomers = $scopeCustomers($customerModel)->where('status', 'active')->countAllResults();
+        $recentCustomers = $scopeCustomers($customerModel)->orderBy('created_at', 'DESC')->limit(5)->findAll();
         
         // Inactive customers
-        $inactiveCustomers = $customerModel
+        $inactiveCustomers = $scopeCustomers($customerModel)
             ->where('status', 'inactive')
             ->countAllResults();
 
         // New customers this month
-        $newThisMonth = $customerModel
+        $newThisMonth = $scopeCustomers($customerModel)
             ->where('created_at >=', date('Y-m-01 00:00:00'))
             ->where('created_at <=', date('Y-m-t 23:59:59'))
             ->countAllResults();
 
         // Recent customers
-        $recentCustomers = $customerModel
+        $recentCustomers = $scopeCustomers($customerModel)
             ->orderBy('created_at', 'DESC')
             ->limit(5)
             ->findAll();
 
         //customer growth line chart data
-        $growth = $customerModel
+        $growth = $scopeCustomers($customerModel)
             ->select("
                 DATE_FORMAT(created_at, '%Y-%m') AS month_key,
                 DATE_FORMAT(created_at, '%b') AS month,
@@ -67,13 +78,13 @@ class Dashboard extends BaseController
             ->findAll();
 
         // Status Distribution
-        $statusDistribution = $customerModel
+        $statusDistribution = $scopeCustomers($customerModel)
             ->select('status, COUNT(*) as total')
             ->groupBy('status')
             ->findAll();
 
         // Top 5 Cities
-        $topCities = $customerModel
+        $topCities = $scopeCustomers($customerModel)
             ->select('city, COUNT(*) AS total')
             ->where('city IS NOT NULL')
             ->where('city !=', '')
@@ -95,8 +106,13 @@ class Dashboard extends BaseController
                 'customers.id = customer_activities.customer_id'
             )
             ->orderBy('customer_activities.created_at', 'DESC')
-            ->limit(10)
-            ->findAll();
+            ->limit(10);
+
+        if ($role === 'sales') {
+            $recentActivities->where('customers.assigned_to', $userId);
+        }
+
+        $recentActivities = $recentActivities->findAll();
 
         $data = [
             'total_customers' => $totalCustomers,
@@ -117,7 +133,7 @@ class Dashboard extends BaseController
 
         // Cache dashboard data for 1 hour
         $cache->save(
-            'dashboard_data',
+            $cacheKey,
             $data,
             3600
         );
@@ -129,7 +145,8 @@ class Dashboard extends BaseController
 
     public function refreshCache()
     {
-        cache()->delete('dashboard_data');
+        $cacheKey = 'dashboard_data_' . session()->get('role') . '_' . (int) session()->get('user_id');
+        cache()->delete($cacheKey);
 
         return redirect()
             ->to('/dashboard')

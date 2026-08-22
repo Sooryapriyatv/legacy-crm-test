@@ -184,6 +184,22 @@ public function index()
                 : $this->request->getPost('assigned_to')
         ];
 
+        if (session()->get('role') === 'admin' && $data['assigned_to'] !== null && $data['assigned_to'] !== '') {
+            $assignee = $this->userModel
+                ->whereIn('role', ['manager', 'sales'])
+                ->find((int) $data['assigned_to']);
+
+            if (!$assignee) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('errors', ['assigned_to' => 'Please select a valid assignee.']);
+            }
+
+            $data['assigned_to'] = (int) $data['assigned_to'];
+        } elseif ($data['assigned_to'] === '') {
+            $data['assigned_to'] = null;
+        }
+
         if ($this->customerModel->insert($data)) {
             // Log activity
             $this->activityModel->insert([
@@ -275,6 +291,22 @@ public function index()
 
         if (session()->get('role') === 'admin') {
             $data['assigned_to'] = $this->request->getPost('assigned_to');
+
+            if ($data['assigned_to'] !== null && $data['assigned_to'] !== '') {
+                $assignee = $this->userModel
+                    ->whereIn('role', ['manager', 'sales'])
+                    ->find((int) $data['assigned_to']);
+
+                if (!$assignee) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('errors', ['assigned_to' => 'Please select a valid assignee.']);
+                }
+
+                $data['assigned_to'] = (int) $data['assigned_to'];
+            } else {
+                $data['assigned_to'] = null;
+            }
         }
 
         if ($this->customerModel->update($customer, $data)) {

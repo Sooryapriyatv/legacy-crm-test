@@ -41,6 +41,37 @@ class Customers extends BaseController
         ]);
     }
 
+    protected function validateCustomerData(array $data, ?int $customerId = null): array
+    {
+        $rules = [
+            'name' => 'required|min_length[2]|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+            'email' => 'required|valid_email|max_length[150]',
+            'phone' => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]',
+            'company' => 'permit_empty|max_length[150]',
+            'city' => 'permit_empty|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+            'status' => 'required|in_list[active,inactive,pending]',
+            'notes' => 'permit_empty|max_length[1000]',
+        ];
+
+        $validation = service('validation');
+        $validation->setRules($rules);
+
+        if (!$validation->run($data)) {
+            return $validation->getErrors();
+        }
+
+        $emailQuery = $this->customerModel->where('email', $data['email']);
+        if ($customerId !== null) {
+            $emailQuery->where('id !=', $customerId);
+        }
+
+        if ($emailQuery->first()) {
+            return ['email' => 'The email field must contain a unique value.'];
+        }
+
+        return [];
+    }
+
     /**
      * GET /api/customers
      */
@@ -165,6 +196,29 @@ class Customers extends BaseController
                 ]);
         }
 
+        $allowedFields = ['name', 'email', 'phone', 'company', 'city', 'status', 'notes'];
+        if ($user['role'] === 'admin') {
+            $allowedFields[] = 'assigned_to';
+        }
+        $data = array_intersect_key($data, array_flip($allowedFields));
+
+        if (array_key_exists('assigned_to', $data)) {
+            if ($data['assigned_to'] === null || $data['assigned_to'] === '') {
+                $data['assigned_to'] = null;
+            } elseif (!$this->userModel->whereIn('role', ['manager', 'sales'])->find((int) $data['assigned_to'])) {
+                return $this->response
+                    ->setStatusCode(422)
+                    ->setJSON(['status' => false, 'message' => 'Validation failed.', 'errors' => ['assigned_to' => 'Invalid assignee.']]);
+            }
+        }
+
+        $errors = $this->validateCustomerData($data);
+        if ($errors) {
+            return $this->response
+                ->setStatusCode(422)
+                ->setJSON(['status' => false, 'message' => 'Validation failed.', 'errors' => $errors]);
+        }
+
         if (!$this->customerModel->insert($data)) {
             return $this->response
                 ->setStatusCode(400)
@@ -217,6 +271,29 @@ class Customers extends BaseController
                     'status' => false,
                     'message' => 'Invalid JSON request.'
                 ]);
+        }
+
+        $allowedFields = ['name', 'email', 'phone', 'company', 'city', 'status', 'notes'];
+        if ($user['role'] === 'admin') {
+            $allowedFields[] = 'assigned_to';
+        }
+        $data = array_intersect_key($data, array_flip($allowedFields));
+
+        $errors = $this->validateCustomerData($data, (int) $id);
+        if ($errors) {
+            return $this->response
+                ->setStatusCode(422)
+                ->setJSON(['status' => false, 'message' => 'Validation failed.', 'errors' => $errors]);
+        }
+
+        if (array_key_exists('assigned_to', $data)) {
+            if ($data['assigned_to'] === null || $data['assigned_to'] === '') {
+                $data['assigned_to'] = null;
+            } elseif (!$this->userModel->whereIn('role', ['manager', 'sales'])->find((int) $data['assigned_to'])) {
+                return $this->response
+                    ->setStatusCode(422)
+                    ->setJSON(['status' => false, 'message' => 'Validation failed.', 'errors' => ['assigned_to' => 'Invalid assignee.']]);
+            }
         }
 
         if (!$this->customerModel->update($id, $data)) {

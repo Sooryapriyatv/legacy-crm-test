@@ -25,33 +25,33 @@
                 <table class="table table-borderless">
                     <tr>
                         <th width="150">ID:</th>
-                        <td><?= $customer['id'] ?></td>
+                        <td><?= esc($customer['id']) ?></td>
                     </tr>
                     <tr>
                         <th>Name:</th>
-                        <td><strong><?= $customer['name'] ?></strong></td>
+                        <td><strong><?= esc($customer['name']) ?></strong></td>
                     </tr>
                     <tr>
                         <th>Email:</th>
-                        <td><?= $customer['email'] ?></td>
+                        <td><?= esc($customer['email']) ?></td>
                     </tr>
                     <tr>
                         <th>Phone:</th>
-                        <td><?= $customer['phone'] ?: '-' ?></td>
+                        <td><?= esc($customer['phone'] ?: '-') ?></td>
                     </tr>
                     <tr>
                         <th>Company:</th>
-                        <td><?= $customer['company'] ?: '-' ?></td>
+                        <td><?= esc($customer['company'] ?: '-') ?></td>
                     </tr>
                     <tr>
                         <th>City:</th>
-                        <td><?= $customer['city'] ?: '-' ?></td>
+                        <td><?= esc($customer['city'] ?: '-') ?></td>
                     </tr>
                     <tr>
                         <th>Status:</th>
                         <td>
-                            <span class="status-badge status-<?= $customer['status'] ?>">
-                                <?= ucfirst($customer['status']) ?>
+                            <span class="status-badge status-<?= esc($customer['status']) ?>">
+                                <?= esc(ucfirst($customer['status'])) ?>
                             </span>
                         </td>
                     </tr>
@@ -69,7 +69,7 @@
                 <div class="mt-3">
                     <strong>Notes:</strong>
                     <div class="p-3 bg-light rounded">
-                        <?= nl2br($customer['notes']) ?>
+                        <?= nl2br(esc($customer['notes'])) ?>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -88,10 +88,10 @@
                         <?php foreach ($activities as $activity): ?>
                         <div class="mb-3 pb-3 border-bottom">
                             <div class="d-flex justify-content-between">
-                                <strong class="text-capitalize"><?= $activity['action'] ?></strong>
+                                <strong class="text-capitalize"><?= esc($activity['action']) ?></strong>
                                 <small class="text-muted"><?= date('M d, H:i', strtotime($activity['created_at'])) ?></small>
                             </div>
-                            <small class="text-muted"><?= $activity['description'] ?></small>
+                            <small class="text-muted"><?= esc($activity['description']) ?></small>
                         </div>
                         <?php endforeach; ?>
                     </div>

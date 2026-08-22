@@ -20,7 +20,7 @@
 
 <div class="card">
     <div class="card-header bg-warning">
-        <h5 class="mb-0"><i class="bi bi-pencil"></i> Edit Customer #<?= $customer['id'] ?></h5>
+        <h5 class="mb-0"><i class="bi bi-pencil"></i> Edit Customer #<?= esc($customer['id']) ?></h5>
     </div>
     <div class="card-body">
         <form action="<?= base_url('customers/update/' . $customer['id']) ?>" method="POST">
@@ -68,7 +68,7 @@
                 <select name="assigned_to" class="form-select">
                     <option value="">Unassigned</option>
                     <?php foreach ($users ?? [] as $user): ?>
-                        <option value="<?= $user['id'] ?>" <?= old('assigned_to', $customer['assigned_to']) == $user['id'] ? 'selected' : '' ?>>
+                        <option value="<?= esc($user['id']) ?>" <?= old('assigned_to', $customer['assigned_to']) == $user['id'] ? 'selected' : '' ?>>
                             <?= esc($user['name']) ?> (<?= esc($user['role']) ?>)
                         </option>
                     <?php endforeach; ?>

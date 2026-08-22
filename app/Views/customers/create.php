@@ -121,7 +121,7 @@
                 <select name="assigned_to" class="form-select">
                     <option value="">Unassigned</option>
                     <?php foreach ($users ?? [] as $user): ?>
-                        <option value="<?= $user['id'] ?>" <?= old('assigned_to') == $user['id'] ? 'selected' : '' ?>>
+                        <option value="<?= esc($user['id']) ?>" <?= old('assigned_to') == $user['id'] ? 'selected' : '' ?>>
                             <?= esc($user['name']) ?> (<?= esc($user['role']) ?>)
                         </option>
                     <?php endforeach; ?>

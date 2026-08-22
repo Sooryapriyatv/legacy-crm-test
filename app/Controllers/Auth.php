@@ -25,8 +25,12 @@ class Auth extends BaseController
 
     public function authenticate()
     {
-        $username = $this->request->getPost('username');
+        $username = trim((string) $this->request->getPost('username'));
         $password = $this->request->getPost('password');
+
+        if ($username === '' || !is_string($password) || $password === '') {
+            return redirect()->back()->withInput()->with('error', 'Invalid credentials');
+        }
 
         $user = $this->userModel
             ->where('email', $username)
@@ -45,6 +49,7 @@ class Auth extends BaseController
                 ->with('error', 'Invalid credentials');
         }
 
+        session()->regenerate(true);
         session()->set([
             'user_id'   => $user['id'],
             'username'  => $user['name'],
