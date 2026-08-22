@@ -1,5 +1,52 @@
 <?= $this->include('layout/header') ?>
 
+<style>
+    .customer-pagination .pagination {
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 0;
+    }
+
+    .customer-pagination .page-item .page-link {
+        min-width: 38px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #2c3e50;
+        text-align: center;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .customer-pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+        background-color: #eaf4fb;
+        border-color: #3498db;
+        color: #2478ad;
+        transform: translateY(-1px);
+    }
+
+    .customer-pagination .page-item.active .page-link {
+        background-color: #2c3e50;
+        border-color: #2c3e50;
+        color: #fff;
+        box-shadow: 0 3px 8px rgba(44, 62, 80, 0.2);
+    }
+
+    .customer-pagination .page-item.disabled .page-link {
+        background-color: #f8f9fa;
+        color: #adb5bd;
+    }
+
+    @media (max-width: 576px) {
+        .customer-pagination .pagination {
+            gap: 3px;
+        }
+
+        .customer-pagination .page-item .page-link {
+            min-width: 34px;
+            padding: 0.375rem 0.5rem;
+        }
+    }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-people"></i> Customers</h2>
     <div>
@@ -192,7 +239,7 @@
 
         <!-- Pagination -->
         <?php if ($pager): ?>
-            <div class="mt-3">
+            <div class="customer-pagination mt-4 pt-3 border-top">
                 <?= $pager->links() ?>
             </div>
         <?php endif; ?>
