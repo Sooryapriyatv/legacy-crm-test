@@ -254,25 +254,40 @@ public function index()
     public function update($id)
     {
         $rules = [
-    'name'    => 'required|min_length[2]|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
-    'email' => 'required|valid_email|max_length[150]|is_unique[customers.email,id,' . $id . ']',
-    'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]|is_unique[customers.phone,id,' . $id . ']',
-    'company' => 'permit_empty|max_length[150]',
-    'city'    => 'permit_empty|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
-    'status'  => 'required|in_list[active,inactive,pending]',
-    'notes'   => 'permit_empty|max_length[1000]',
-];
+            'name'    => 'required|min_length[2]|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+            'email'   => 'required|valid_email|max_length[150]',
+            'phone'   => 'permit_empty|regex_match[/^[0-9]+$/]|max_length[20]',
+            'company' => 'permit_empty|max_length[150]',
+            'city'    => 'permit_empty|max_length[100]|regex_match[/^[a-zA-Z\s]+$/]',
+            'status'  => 'required|in_list[active,inactive,pending]',
+            'notes'   => 'permit_empty|max_length[1000]',
+        ];
+
+        $customer = $this->customerModel->find($id);
+
+        if (!$customer) {
+            return redirect()->to('/customers')->with('error', 'Customer not found');
+        }
+
         if (!$this->validate($rules)) {
             return redirect()->back()
                 ->withInput()
                 ->with('errors', $this->validator->getErrors());
         }
 
+        $email = trim((string) $this->request->getPost('email'));
+        $phone = trim((string) $this->request->getPost('phone'));
 
-        $customer = $this->customerModel->find($id);
+        if ($this->customerModel->where('email', $email)->where('id !=', $id)->first()) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', ['email' => 'The email field must contain a unique value.']);
+        }
 
-        if (!$customer) {
-            return redirect()->to('/customers')->with('error', 'Customer not found');
+        if ($phone !== '' && $this->customerModel->where('phone', $phone)->where('id !=', $id)->first()) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', ['phone' => 'The phone field must contain a unique value.']);
         }
 
         if (!$this->canEdit($customer)) {
@@ -309,7 +324,7 @@ public function index()
             }
         }
 
-        if ($this->customerModel->update($customer, $data)) {
+        if ($this->customerModel->update($id, $data)) {
             // Log activity
             $this->activityModel->insert([
                 'customer_id' => $id,

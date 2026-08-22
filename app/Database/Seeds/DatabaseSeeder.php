@@ -17,10 +17,19 @@ class DatabaseSeeder extends Seeder
         $companies = ['Tech Solutions', 'Digital Services', 'Cloud Systems', 'Data Corp', 'Web Innovations', 'Mobile Apps Ltd'];
 
         for ($i = 1; $i <= 100; $i++) {
+            $nameSuffix = '';
+            $nameNumber = $i;
+
+            while ($nameNumber > 0) {
+                $nameNumber--;
+                $nameSuffix = chr(65 + ($nameNumber % 26)) . $nameSuffix;
+                $nameNumber = intdiv($nameNumber, 26);
+            }
+
             $customers[] = [
-                'name' => 'Customer ' . $i,
+                'name' => 'Customer ' . $nameSuffix,
                 'email' => 'customer' . $i . '@example.com',
-                'phone' => '+91' . rand(7000000000, 9999999999),
+                'phone' => '917000000000' + $i,
                 'company' => $companies[array_rand($companies)],
                 'city' => $cities[array_rand($cities)],
                 'status' => $statuses[array_rand($statuses)],
