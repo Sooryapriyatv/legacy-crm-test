@@ -211,8 +211,8 @@ public function index()
             ]);
 
             // Email failure will NOT break customer creation.
-    $emailService = new EmailService();
-    $emailService->sendWelcomeEmail($data);
+            $emailService = new EmailService();
+            $emailService->sendWelcomeEmail($data);
 
             return redirect()->to('/customers')->with('success', 'Customer created successfully');
         }
